@@ -1,0 +1,106 @@
+DATA
+
+<div id="scatter1"></div>
+
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script>
+
+	var h = 600, w = 600;
+	var padding = 50;
+
+	// declare svg
+	var svg = d3.select("#scatter1")
+				.append("svg")
+				.attr("width", w)
+				.attr("height", h);
+
+	// text while data loads asynchronously
+	svg.append("text")
+	   .attr("class", "loading")
+	   .text("Loading...")
+	   .attr("x", function(d) {
+	   	return (w/2);
+	   })
+	   .attr("y", function(d) {
+	   	return (h/2);
+	   });
+
+	// load in data
+	d3.csv("DATA/featuresdf.csv", function(dataset) {
+		
+		// make strings numeric
+		dataset.forEach(function(d) {
+			d.acousticness = +d.acousticness;
+			d.danceability = +d.danceability;
+			d.duration_ms = +d.duration_ms;
+			d.energy = +d.energy;
+			d.instrumentalness = +d.instrumentalness;
+			d.key = +d.key;
+			d.liveness = +d.liveness;
+			d.loudness = +d.loudness;
+			d.mode = +d.mode;
+			d.speechiness = +d.speechiness;
+			d.tempo = +d.tempo;
+			d.time_signature = +d.time_signature;
+			d.valence = +d.valence;
+		});
+		console.log(dataset);
+
+		console.log(d3.max(dataset, function(d) {
+			return Math.abs(d.loudness);
+		}));
+
+		// define scales and axes
+		var x = d3.scaleLinear()
+		          .domain([0, d3.max(dataset, function(d) {
+		          	return Math.ceil(Math.abs(d.loudness));
+		          })])
+		          .range([padding, w-padding]),     
+			y = d3.scaleLinear()
+			      .domain([0,1])
+			      .range([h-padding, padding]);
+		var xAxis = d3.axisBottom().scale(x).ticks(4),
+			yAxis = d3.axisLeft().scale(y).ticks(4);
+
+		// draw y axis
+		svg.append("g")
+			.attr("class", "axis")
+			.attr("transform", "translate(50, 0)")
+			.call(yAxis);
+
+		// draw x axis
+		svg.append("g")
+			.attr("class", "axis")
+			.attr("transform", "translate(0, 550)") 
+			.call(xAxis);
+
+		// x setup (loudness)
+		var xVal = function(d) { return d.loudness;},
+			xScale = d3.scaleLinear().range([padding, w-padding]),
+			xMap = function(d) { return xScale(xVal(d));};
+
+		svg.selectAll(".loading").remove();
+
+		svg.selectAll("circle")
+		   .data(dataset)
+		   .enter()
+		   .append("circle")
+		   .attr("class", "circle")
+		   .attr("cx", function(d) {
+		   	var v = Math.abs(d.loudness);
+		   	return x(v);
+		   })
+		   .attr("cy", function(d) {
+			return y(d.energy);
+		   })
+		   .attr("r", 3);
+
+	});
+
+</script>
+	
+</html>
+
+
+<!-- python -m http.server -->
+<!-- http://localhost:8000/ -->

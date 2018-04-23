@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+
+
+<head>
+	<link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600" rel="stylesheet">
+	<title>Radial Map</title>
+</head>
+
+
+<style type="text/css">
+	
+	.outerBoundary {
+		fill: white;
+		/*stroke: rgb(169,169,169);*/
+		stroke: none; 
+		stroke-width: 1;
+	}
+
+	.innerBoundary {
+		fill: white;
+		/*stroke: rgb(169,169,169);*/
+		stroke: none; 
+		stroke-width: 1;
+	}
+
+	.chartTitle {
+		font-family: 'Source Sans Pro', sans-serif;
+		font-weight: 600;
+		font-size: 25px;
+		/*font-style: italic;*/
+	}
+
+	.title {
+		font-family: 'Source Sans Pro', sans-serif;
+		font-weight: 600;
+		font-size: 18.5px;
+	}
+
+	.artist {
+		font-family: 'Source Sans Pro', sans-serif;
+		font-weight: 400;	
+		font-size: 14px;
+	}
+
+	.rank {
+		font-family: 'Source Sans Pro', sans-serif;
+		font-weight: 400;	
+		font-size: 14px;
+	}
+
+	.line {
+		fill: none;
+		/*stroke: orange;*/
+		stroke-width: 4;
+		opacity: 0.7;
+	}
+
+	.keyCircle {
+		fill: none;
+		stroke: rgb(169,169,169); 
+		stroke-width: 4;
+		opacity: 0.7;
+	}
+
+	.labels {
+		font-family: 'Source Sans Pro', sans-serif;
+		font-weight: 600;
+		font-size: 10px;
+	}
+
+	.nextButton, .prevButton {
+		fill: rgb(40,70,70);
+	}
+
+	.prevButtonRadius, .nextButtonRadius {
+		fill: white;
+		stroke: rgb(169,169,169);
+		stroke-width: 1;
+	}
+
+</style>
+
+<script src="https://d3js.org/d3.v4.min.js"></script>
+
+<body>
+	<script type="text/javascript">
+
+		function capitalizeFirstLetter(string) {
+   			return string.charAt(0).toUpperCase() + string.slice(1);
+		}
+		
+		var canvasWidth = 1000,
+			canvasHeight = 600,
+			h = 500,
+			w = 900,
+			mid = w/2;
+			pad = 100,
+			innerRad = 75,
+			interval = 95; // total to be 170
+
+		var svg = d3.select("body")
+					.append("svg")
+					.attr("height", canvasHeight)
+					.attr("width", canvasWidth);
+
+		svg.append("circle")
+		   .attr("class", "outerBoundary")
+		   .attr("cy", h/2)
+		   .attr("cx", w/2)
+		   .attr("r", innerRad + interval);
+
+		svg.append("circle")
+		   .attr("class", "innerBoundary")
+		   .attr("cy", h/2)
+		   .attr("cx", w/2)
+		   .attr("r", innerRad);
+
+		svg.append("text")
+		   .attr("class", "chartTitle")
+		   .attr("text-anchor", "middle")
+		   .attr("x", w/2)
+		   .attr("y", h/2 - 16)
+		   .text("Spotify");
+
+		svg.append("text")
+		   .attr("class", "chartTitle")
+		   .attr("text-anchor", "middle")
+		   .attr("x", w/2)
+		   .attr("y", h/2 + 8)
+		   .text("Top 100");
+
+		svg.append("text")
+		   .attr("class", "chartTitle")
+		   .attr("text-anchor", "middle")
+		   .attr("x", w/2)
+		   .attr("y", h/2 + 32)
+		   .text("2017");
+
+		var line = d3.line()
+   					 .x(function(d) { return d[0]; })
+   					 .y(function(d) { return d[1]; })
+   					 .curve(d3.curveCardinalClosed.tension(0.1));
+
+   		var buttonLine = d3.line()
+   					 .x(function(d) { return d[0]; })
+   					 .y(function(d) { return d[1]; });
+
+   		var triH = 21, // triangle dims
+			triW = 14,
+			rectW = 5,
+			buttonRadius = 23;
+		var forTri = [[0,0], [0, triH], [triW, triH/2]], // forward triangle
+			backTri = [[0,0], [0, triH], [-triW, triH/2]]; // backward triangle
+		var forTriX = w/2 + 45,
+			forRectX = forTriX + triW,
+			forTriY = canvasHeight - 10 - triH/2 - 20,
+			backTriX = w/2 - 45,
+			backRectX = backTriX - triW,
+			backTriY = canvasHeight - 10 - triH/2 - 20;
+
+		// append buttons
+		svg.append("circle")
+		   .attr("class", "nextButtonRadius")
+		   .attr("cy", forTriY + triH/2)
+		   .attr("cx", forTriX + ((triW + rectW)/2))
+		   .attr("r", buttonRadius);
+
+   		svg.append("path")
+		   .datum(forTri)
+		   .attr("transform", "translate(" + forTriX + "," + forTriY + ")")
+		   .attr("fill", "black")
+	       .attr("class", "nextButton")
+	       .attr("d", buttonLine);
+
+	    svg.append("rect")
+	       .attr("class", "nextButton")
+		   .attr("transform", "translate(" + forRectX + "," + forTriY + ")")
+		   .attr("x", 0)
+		   .attr("y", 0)
+		   .attr("height", triH)
+		   .attr("width", rectW);
+
+		svg.append("circle")
+		   .attr("class", "prevButtonRadius")
+		   .attr("cy", backTriY + triH/2)
+		   .attr("cx", backTriX - ((triW + rectW)/2))
+		   .attr("r", buttonRadius);
+
+   		svg.append("path")
+		   .datum(backTri)
+		   .attr("transform", "translate(" + backTriX + "," + backTriY + ")")
+		   .attr("fill", "black")
+	       .attr("class", "prevButton")
+	       .attr("d", buttonLine);
+
+	    svg.append("rect")
+	       .attr("class", "prevButton")
+		   .attr("transform", "translate(" + backRectX + "," + backTriY + ")")
+		   .attr("x", 0 - rectW)
+		   .attr("y", 0)
+		   .attr("height", triH)
+		   .attr("width", rectW);
+
+		// load in data
+		d3.csv("DATA/featuresdf.csv", function(dataset) {
+	
+			// make strings numeric
+			dataset.forEach(function(d) {
+				d.acousticness = +d.acousticness;
+				d.danceability = +d.danceability;
+				d.duration_ms = +d.duration_ms;
+				d.energy = +d.energy;
+				d.instrumentalness = +d.instrumentalness;
+				d.key = +d.key;
+				d.liveness = +d.liveness;
+				d.loudness = +d.loudness;
+				d.mode = +d.mode;
+				d.speechiness = +d.speechiness;
+				d.tempo = +d.tempo;
+				d.time_signature = +d.time_signature;
+				d.valence = +d.valence;
+			});
+
+			var features = ["acousticness", "danceability", "energy", "instrumentalness", "tempo", "liveness", "speechiness", "valence"];
+
+			// append labels to radius
+			for (var i = 0; i < features.length; i++) {
+				svg.append("text") 
+				   .attr("class", "labels")
+				   .attr("transform", "translate(" + w/2 + "," + h/2 + ")rotate("+ (360/features.length) * i +")")
+				   .text(capitalizeFirstLetter(features[i]))
+				   .attr("x", innerRad + interval + 10)
+				   .attr("y", 0);
+			}
+
+			// function to generate coordinates in circle
+			function getCoordinates(song, features) {
+				var pairs = []; // array of coordinate pairs
+				for (var i = 0; i < features.length; i++) {
+					// console.log(song[features[i]]); // reference value
+					var point = []; // array of single pair
+					var angle = (2*Math.PI)/features.length;
+					var scale = d3.scaleLinear().domain([d3.min(dataset, function(d) { return d[features[i]]}), d3.max(dataset, function(d) { return d[features[i]]})]).range([0, interval]);
+					var x = (innerRad + scale(song[features[i]])) * (Math.cos(angle * i)),
+						y = (innerRad + scale(song[features[i]])) * (Math.sin(angle * i)),
+						pair = [x,y];
+					pairs.push(pair);
+				}
+				return pairs; // return pairs array
+			}
+
+			var songIndex = 0; // initialise starting index
+			var song = dataset[songIndex]; // song reference
+			var coordinates = getCoordinates(song, features); // get coordinates for song
+
+			function getLineColour(mode) {
+				if (mode == 1) {
+					return "rgb(255,215,0)";
+				}
+				else {
+					return "rgb(255,99,71)";
+				}
+			}
+
+			// draw line between points
+			var songLine = svg.append("path")
+						      .datum(coordinates)
+						      .attr("transform", "translate(" + w/2 + "," + h/2 + ")")
+						      .attr("class", "line")
+						      .attr("d", line)
+						      .style("stroke", getLineColour(song.mode));
+
+			// append title
+			var songTitle = svg.append("text") 
+							   .attr("class", "title")
+							   .attr("text-anchor", "middle")
+							   .attr("x", w/2)
+							   .attr("y", forTriY + triH/2 - 65)
+							   .text(song.name);
+
+			// append artist		
+			var songArtist = svg.append("text") 
+						     .attr("class", "artist")
+						     .text(song.artists)
+						     .attr("text-anchor", "middle")
+						     .attr("x", w/2)
+						     .attr("y", forTriY + triH/2 - 45);
+
+			// append ranking
+			var rank = svg.append("text")
+					   	  .attr("class", "rank")
+					   	  .attr("text-anchor", "middle")
+					      .attr("x", w/2)
+					  	  .attr("y", forTriY + triH/2 + 4)
+					  	  .text(songIndex + 1 + "/100");
+
+
+			// key ring
+			var scaleKey = d3.scaleLinear()
+							 .domain([d3.min(dataset, function(d) { return d.key}), d3.max(dataset, function(d) { return d.key})])
+							 .range([innerRad, innerRad + interval]);
+			var keyCircle = svg.append("circle")
+							   .attr("class", "keyCircle")
+							   .attr("cy", h/2)
+							   .attr("cx", w/2)
+							   .attr("r", scaleKey(song.key));
+
+			//On click, update with new data			
+			d3.selectAll(".nextButtonRadius, .nextButton")
+			  .on("click", function() { 
+
+			  	if (songIndex == 99) {
+			  		songIndex = 0; // jump to start again
+			  	}
+			  	else {
+			  		songIndex++; // increment song index
+			  	}
+
+			  	var nextSongCoordinates = getCoordinates(dataset[songIndex], features); // get song coordinates
+			  	
+			  	// change song line
+			  	songLine.datum(nextSongCoordinates)
+				     	.transition(300)
+				    	.ease(d3.easeBack)
+				    	.duration(500)
+				    	.attr("transform", "translate(" + w/2 + "," + h/2 + ")")
+				    	.attr("class", "line")
+				    	.attr("d", line)
+				    	.style("stroke", getLineColour(dataset[songIndex].mode));
+
+				// change song title
+				songTitle.attr( "fill-opacity", 0)
+						 .transition(300)
+						 .attr( "fill-opacity", 1)
+						 .text(dataset[songIndex].name)	
+						 .attr("class", "title")
+						 .attr("text-anchor", "middle")
+					     .attr("x", w/2)
+					     .attr("y", forTriY + triH/2 - 65);
+
+				// change song artist
+				songArtist.attr("fill-opacity", 0)
+						  .transition(300)
+						  .attr("fill-opacity", 1)
+						  .text(dataset[songIndex].artists)	
+						  .attr("class", "artist")
+						  .attr("text-anchor", "middle")
+					      .attr("x", w/2)
+					      .attr("y", forTriY + triH/2 - 45);
+
+				// change key
+				keyCircle.transition(300)
+				    	 .ease(d3.easeBack)
+				    	 .duration(500)
+				    	 .attr("class", "keyCircle")
+   					     .attr("cy", h/2)
+					     .attr("cx", w/2)
+					     .attr("r", scaleKey(dataset[songIndex].key));
+
+				// change rank
+				rank.attr("fill-opacity", 0)
+					.transition(300)
+					.attr("fill-opacity", 1)
+					.attr("class", "rank")
+					.attr("text-anchor", "middle")
+			        .attr("x", w/2)
+			  	    .attr("y", forTriY + triH/2 + 4)
+					.text(songIndex + 1 + "/100");
+
+			  });
+
+			d3.selectAll(".prevButtonRadius, .prevButton")
+			  .on("click", function() { 
+			  	
+			  	if (songIndex == 0) {
+			  		songIndex = 99; // jump to end
+			  	}
+			  	else {
+			  		songIndex--; // decrement song index
+			  	}
+
+			  	var lastSongCoordinates = getCoordinates(dataset[songIndex], features); // get song coordinates
+			  	
+			  	// change song line
+			  	songLine.datum(lastSongCoordinates)
+				     	.transition(300)
+				    	.ease(d3.easeBack)
+				    	.duration(500)
+				    	.attr("transform", "translate(" + w/2 + "," + h/2 + ")")
+				    	.attr("class", "line")
+				    	.attr("d", line)
+				    	.style("stroke", getLineColour(dataset[songIndex].mode));
+
+				// change song title
+				songTitle.attr( "fill-opacity", 0)
+						 .transition(300)
+						 .attr( "fill-opacity", 1)
+						 .text(dataset[songIndex].name)	
+						 .attr("class", "title")
+						 .attr("text-anchor", "middle")
+					     .attr("x", w/2)
+					     .attr("y", forTriY + triH/2 - 65);
+
+				// change song artist
+				songArtist.attr("fill-opacity", 0)
+						  .transition(300)
+						  .attr("fill-opacity", 1)
+						  .text(dataset[songIndex].artists)	
+						  .attr("class", "artist")
+						  .attr("text-anchor", "middle")
+					      .attr("x", w/2)
+					      .attr("y", forTriY + triH/2 - 45);
+
+				// change key
+				keyCircle.transition(300)
+				    	 .ease(d3.easeBack)
+				    	 .duration(500)
+				    	 .attr("class", "keyCircle")
+   					     .attr("cy", h/2)
+					     .attr("cx", w/2)
+					     .attr("r", scaleKey(dataset[songIndex].key));
+
+				// change rank
+				rank.attr("fill-opacity", 0)
+					.transition(300)
+					.attr("fill-opacity", 1)
+					.attr("class", "rank")
+					.attr("text-anchor", "middle")
+			        .attr("x", w/2)
+			  	    .attr("y", forTriY + triH/2 + 4)
+					.text(songIndex + 1 + "/100");
+
+			  });
+
+		});
+
+
+	</script>
+</body>
+
+</html>
+
